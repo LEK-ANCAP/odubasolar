@@ -1,11 +1,20 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Filter, Plus, ChevronLeft, ChevronRight, Search, Download, MoreHorizontal, ArrowUpRight, Edit, Trash2, ClipboardEdit, ArrowUpDown, ArrowUp, ArrowDown, X, Check, Text, Tag, DollarSign, TrendingUp, Coins, Loader2, AlertCircle, Calculator } from "lucide-react"
+import { Filter, Plus, ChevronLeft, ChevronRight, Search, Download, MoreHorizontal, ArrowUpRight, Edit, Trash2, ClipboardEdit, ArrowUpDown, ArrowUp, ArrowDown, X, Check, Text, Tag, DollarSign, TrendingUp, Coins, Loader2, AlertCircle, Calculator, ChevronDown } from "lucide-react"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog"
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -51,8 +60,49 @@ export function InventoryTable() {
     const [showFilters, setShowFilters] = useState(false)
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
     const [isFabOpen, setIsFabOpen] = useState(false)
-    const { products, categories, fetchProducts, deleteProduct, isLoading, error, generateTestData, clearProducts } = useInventoryStore()
+    const [isMassCategoryModalOpen, setIsMassCategoryModalOpen] = useState(false)
+    const [isMassDeleteModalOpen, setIsMassDeleteModalOpen] = useState(false)
+    const [massCategoryValue, setMassCategoryValue] = useState("")
+
+    const { products, categories, fetchProducts, deleteProduct, updateProduct, isLoading, error } = useInventoryStore()
     const { usdRate } = useSettingsStore()
+
+    const handleMassDelete = async () => {
+        setIsMassDeleteModalOpen(false)
+        const ids = [...selectedProducts]
+        let hasError = false
+        for (const id of ids) {
+            const result = await deleteProduct(id)
+            if (!result.success) {
+                const name = products.find(p => p.id === id)?.name || id
+                toast.error(`No se pudo eliminar "${name}": ${result.error}`)
+                hasError = true
+            }
+        }
+        if (!hasError) {
+            toast.success(`${ids.length} productos eliminados correctamente.`)
+        }
+        setSelectedProducts([])
+    }
+
+    const handleMassCategorize = async () => {
+        if (!massCategoryValue.trim()) return
+        setIsMassCategoryModalOpen(false)
+        const ids = [...selectedProducts]
+        let hasError = false
+        for (const id of ids) {
+            const success = await updateProduct(id, { category: massCategoryValue })
+            if (!success) hasError = true
+        }
+
+        if (!hasError) {
+            toast.success(`Se categorizaron ${ids.length} productos como "${massCategoryValue}".`)
+        } else {
+            toast.error("Hubo un error al categorizar algunos productos.")
+        }
+        setSelectedProducts([])
+        setMassCategoryValue("")
+    }
 
     // Reset page when search changes
     useEffect(() => {
@@ -172,6 +222,59 @@ export function InventoryTable() {
                 onConfirm={handleConfirmDelete}
                 productName={productToDelete?.name || ""}
             />
+
+            <Dialog open={isMassCategoryModalOpen} onOpenChange={setIsMassCategoryModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Categorizar {selectedProducts.length} productos</DialogTitle>
+                        <DialogDescription>
+                            Elige una categoría existente o crea una nueva para los productos seleccionados.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">Categorías existentes</Label>
+                            <Select value={massCategoryValue} onValueChange={setMassCategoryValue}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecciona una categoría..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {categories.map((cat, idx) => (
+                                        <SelectItem key={cat || `cat-${idx}`} value={cat || "Sin categoría"}>{cat || "Sin categoría"}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label className="text-sm font-medium">O escribe una nueva categoría</Label>
+                            <Input
+                                placeholder="Ej. Accesorios..."
+                                value={massCategoryValue}
+                                onChange={(e) => setMassCategoryValue(e.target.value)}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsMassCategoryModalOpen(false)}>Cancelar</Button>
+                        <Button onClick={handleMassCategorize} disabled={!massCategoryValue.trim()}>Aplicar Categoría</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isMassDeleteModalOpen} onOpenChange={setIsMassDeleteModalOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Eliminar múltiples productos</DialogTitle>
+                        <DialogDescription>
+                            ¿Estás seguro de que deseas eliminar permanentemente {selectedProducts.length} productos? Esta acción removerá su stock e historial. No se puede deshacer.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsMassDeleteModalOpen(false)}>Cancelar</Button>
+                        <Button variant="destructive" onClick={handleMassDelete}>Sí, eliminar todos</Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Summary Cards */}
             {/* Summary Cards */}
@@ -504,6 +607,30 @@ export function InventoryTable() {
                         </div>
                     </div>
 
+                    {selectedProducts.length > 0 && (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="outline" className="h-10 rounded-xl border-slate-200 shadow-sm font-medium shrink-0 text-slate-800 hover:bg-slate-50 gap-2 px-3">
+                                    <span className="hidden sm:inline">Acciones</span> ({selectedProducts.length})
+                                    <ChevronDown className="w-4 h-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 z-[100]">
+                                <DropdownMenuItem onClick={() => setIsMassCategoryModalOpen(true)}>
+                                    <Tag className="w-4 h-4 mr-2" />
+                                    Categorizar...
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
+                                    className="text-rose-600 focus:bg-rose-50 focus:text-rose-700"
+                                    onClick={() => setIsMassDeleteModalOpen(true)}
+                                >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Eliminar Seleccionados
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    )}
                     <Button
                         onClick={handleAddProduct}
                         className="hidden md:flex h-10 rounded-xl bg-slate-900 text-white hover:bg-slate-800 shadow-sm font-medium shrink-0"
@@ -517,30 +644,6 @@ export function InventoryTable() {
                 {showFilters && (
                     <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center animate-in slide-in-from-top-2 fade-in duration-200 shadow-sm mb-4">
                         <div className="flex flex-wrap gap-3 items-center w-full lg:w-auto">
-                            {selectedProducts.length > 0 && (
-                                <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    className="h-9 text-xs font-medium rounded-lg"
-                                    onClick={async () => {
-                                        if (confirm(`¿Estás seguro de que deseas eliminar ${selectedProducts.length} productos?`)) {
-                                            const ids = [...selectedProducts]
-                                            setSelectedProducts([])
-                                            for (const id of ids) {
-                                                const result = await deleteProduct(id)
-                                                if (!result.success) {
-                                                    const name = products.find(p => p.id === id)?.name || id
-                                                    toast.error(`No se pudo eliminar "${name}": ${result.error}`)
-                                                }
-                                            }
-                                        }
-                                    }}
-                                >
-                                    <Trash2 className="mr-2 h-3.5 w-3.5" />
-                                    Eliminar ({selectedProducts.length})
-                                </Button>
-                            )}
-
                             {/* Category Filter */}
                             <Select
                                 value={selectedCategory}

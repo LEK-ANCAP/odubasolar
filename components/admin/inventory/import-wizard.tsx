@@ -32,6 +32,7 @@ import { Switch } from "@/components/ui/switch"
 import { FileUp, UploadCloud, ArrowRight, Loader2 } from "lucide-react"
 
 import { useInventoryStore, Product } from "@/hooks/use-inventory-store"
+import { useSettingsStore } from "@/hooks/use-settings-store"
 
 // Steps of the Import Wizard
 type Step = "UPLOAD" | "MAPPING" | "REVIEW" | "IMPORTING" | "SUCCESS"
@@ -76,6 +77,7 @@ export function ImportWizard() {
     const products = useInventoryStore(state => state.products)
     const addProduct = useInventoryStore(state => state.addProduct)
     const updateProduct = useInventoryStore(state => state.updateProduct)
+    const usdRate = useSettingsStore(state => state.usdRate)
 
     const handleOpenChange = (open: boolean) => {
         setIsOpen(open)
@@ -207,9 +209,19 @@ export function ImportWizard() {
                 return isNaN(parsed) ? 0 : parsed;
             }
 
-            if (productData.price !== undefined) productData.saleUsd = parseNumber(productData.price)
-            if (productData.costPrice !== undefined) productData.costUsd = parseNumber(productData.costPrice)
-            if (productData.stock !== undefined) productData.stock = parseNumber(productData.stock)
+            if (productData.price !== undefined) {
+                const val = parseNumber(productData.price)
+                productData.saleUsd = val
+                productData.saleCup = (val !== undefined) ? val * usdRate : 0
+            }
+            if (productData.costPrice !== undefined) {
+                const val = parseNumber(productData.costPrice)
+                productData.costUsd = val
+                productData.costCup = (val !== undefined) ? val * usdRate : 0
+            }
+            if (productData.stock !== undefined) {
+                productData.stock = parseNumber(productData.stock)
+            }
 
             // Conflict resolution: Check if product already exists by name
             const existingProduct = products.find(p =>
