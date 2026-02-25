@@ -1,0 +1,401 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Enums removed for SQLite compatibility
+// enum Role { ... }
+// enum ProductCategory { ... }
+// enum OrderStatus { ... }
+
+// Models
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String?
+  emailVerified Boolean?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  // Custom fields
+  password      String?    // Made optional to support OAuth only users
+  role          String     @default("CUSTOMER")
+  phone         String?
+  address       String?
+
+  orders        Order[]
+  assignedInstallations Installation[]
+  budgets       Budget[]
+  deals         Deal[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id           String    @id @default(cuid())
+  accountId    String
+  providerId   String
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken  String?
+  refreshToken String?
+  idToken      String?
+  expiresAt    DateTime?
+  password     String?
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+}
+
+
+model Product {
+  id          String          @id @default(cuid())
+  name        String
+  description String?
+  sku         String?         @unique // Made optional for now, or use as the visible ID
+  
+  // Pricing
+  price       Decimal         @default(0.0) // saleUsd
+  costPrice   Decimal         @default(0.0) // costUsd
+  
+  // Inventory
+  stock       Int             @default(0)
+  minStock    Int             @default(0) // lowStockThreshold
+  
+  category    String          // Was ProductCategory
+  specs       String?         // Tech specs (watts, voltage, etc) - Stored as JSON string
+  imageUrl    String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  kitComponents KitComponent[]
+  orderItems    OrderItem[]
+  kitVariations KitVariation[]
+  budgetItems   BudgetItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+  budgetQuestionImpacts BudgetQuestionImpact[]
+}
+
+
+model Provider {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  address   String?
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  purchaseOrders PurchaseOrder[]
+}
+
+model PurchaseOrder {
+  id                String             @id @default(cuid())
+  providerId        String
+  provider          Provider           @relation(fields: [providerId], references: [id])
+  date              DateTime
+  status            String             @default("DRAFT") // DRAFT, ORDERED, RECEIVED, CANCELLED
+  totalAmount       Decimal            @default(0)
+  currency          String             @default("USD") // USD or CUP
+  notes             String?
+  paymentStatus     String             @default("UNPAID") // UNPAID, PAID, PARTIAL
+  paymentAccountId  String?
+  paymentDate       DateTime?
+  items             PurchaseOrderItem[]
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id])
+  quantity        Int
+  unitCost        Decimal
+}
+
+// ... existing models ...
+
+
+model Kit {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  totalPrice  Decimal
+  imageUrl    String?
+  isFeatured  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  components  KitComponent[]
+  orderItems  OrderItem[]
+  budgetItems BudgetItem[]
+  attributes  KitAttribute[]
+  variations  KitVariation[]
+}
+
+// Join table for Kits <-> Products
+model KitComponent {
+  id        String  @id @default(cuid())
+  kitId     String
+  productId String
+  quantity  Int     @default(1)
+
+  kit       Kit     @relation(fields: [kitId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@unique([kitId, productId])
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  userId      String?     // Can be null if it's just a Lead from the calculator
+  guestEmail  String?
+  guestPhone  String?
+  totalAmount Decimal     @default(0.0)
+  status      String      @default("LEAD") // Was OrderStatus
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  user        User?       @relation(fields: [userId], references: [id])
+  items       OrderItem[]
+  installation Installation?
+  movements   AccountMovement[]
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  kitId     String? // If they bought a full kit
+  productId String? // If they bought a loose product
+  quantity  Int     @default(1)
+  price     Decimal // Price at time of purchase
+
+  order     Order   @relation(fields: [orderId], references: [id])
+  kit       Kit?    @relation(fields: [kitId], references: [id])
+  product   Product? @relation(fields: [productId], references: [id])
+}
+
+model Installation {
+  id          String   @id @default(cuid())
+  orderId     String   @unique
+  operatorId  String?
+  scheduledAt DateTime?
+  completedAt DateTime?
+  status      String   @default("PENDING") // PENDING, SCHEDULED, IN_PROGRESS, DONE
+  notes       String?
+  
+  order       Order    @relation(fields: [orderId], references: [id])
+  operator    User?    @relation(fields: [operatorId], references: [id])
+}
+
+// Budget Module
+
+model Budget {
+  id          String      @id @default(cuid())
+  number      Int         @default(0) // Sequential number for display
+  name        String?     // Budget Name (e.g. "Proyecto Casa de Juan")
+  clientName  String?     // For quick access or guest
+  clientId    String?
+  totalAmount Decimal     @default(0.0)
+  status      String      @default("DRAFT") // DRAFT, SENT, APPROVED, PAID, CANCELLED
+  currency    String      @default("USD") // USD or CUP
+  discountType String?    // PERCENTAGE, FIXED, TARGET_PRICE
+  discountValue Decimal?
+  validUntil  DateTime?
+  notes       String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  client      User?       @relation(fields: [clientId], references: [id])
+  items       BudgetItem[]
+  movements   AccountMovement[]
+}
+
+model BudgetItem {
+  id          String   @id @default(cuid())
+  budgetId    String
+  productId   String?
+  kitId       String?
+  name        String   // Snapshot of product/kit name
+  quantity    Int      @default(1)
+  unitPrice   Decimal  // Snapshot of price at time of budget
+  subtotal    Decimal
+  
+  // For Kits: Store selected configuration
+  configuration String?  // e.g. { "roof_type": "tile", "structure": "aluminum" } - Stored as JSON string
+
+  budget      Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  product     Product? @relation(fields: [productId], references: [id])
+  kit         Kit?     @relation(fields: [kitId], references: [id])
+}
+
+// Budget Logic Configuration
+
+model BudgetQuestion {
+  id        String   @id @default(cuid())
+  text      String
+  type      String   @default("SELECT") // SELECT, YES_NO (boolean treated as options)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  options   BudgetQuestionOption[]
+}
+
+model BudgetQuestionOption {
+  id         String   @id @default(cuid())
+  questionId String
+  label      String
+  value      String
+  order      Int      @default(0)
+  
+  question   BudgetQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  impacts    BudgetQuestionImpact[]
+}
+
+model BudgetQuestionImpact {
+  id        String   @id @default(cuid())
+  optionId  String
+  productId String
+  quantity  Int      @default(1)
+  
+  option    BudgetQuestionOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  product   Product              @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+// Kit Logic Extensions
+
+model KitAttribute {
+  id        String   @id @default(cuid())
+  kitId     String
+  name      String   // e.g. "Tipo de Techo"
+  slug      String   // e.g. "roof_type"
+  order     Int      @default(0)
+  
+  kit       Kit      @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  options   KitAttributeOption[]
+}
+
+
+
+model KitAttributeOption {
+  id          String   @id @default(cuid())
+  attributeId String
+  label       String   // e.g. "Teja Colonial"
+  value       String   // e.g. "tile_colonial"
+  priceValues Decimal? // Optional price add-on just for selecting this option
+  
+  attribute   KitAttribute   @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  variations  KitVariation[]
+}
+
+model KitVariation {
+  id          String   @id @default(cuid())
+  kitId       String
+  optionId    String
+  productId   String
+  quantityAdjustment Int // How many to ADD to the base kit. Can be negative.
+  priceAdjustment    Decimal @default(0.0) // Extra cost per unit if applicable (or just rely on product price)
+
+  kit         Kit      @relation(fields: [kitId], references: [id], onDelete: Cascade)
+  option      KitAttributeOption @relation(fields: [optionId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+}
+
+// Accounting
+
+model FinancialAccount {
+  id          String   @id @default(cuid())
+  name        String   // e.g. "Banco General", "Caja Chica"
+  type        String   @default("BANK") // BANK, CASH, CREDIT
+  balance     Decimal  @default(0.0)
+  currency    String   @default("USD")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+
+  movements   AccountMovement[]
+  expenseTemplates ExpenseTemplate[]
+}
+
+
+model AccountMovement {
+  id          String   @id @default(cuid())
+  accountId   String
+  budgetId    String?
+  orderId     String?
+  amount      Decimal  // Positive for Income, Negative for Expense
+  description String?
+  date        DateTime @default(now())
+  type        String   // INCOME, EXPENSE, TRANSFER
+
+  account     FinancialAccount  @relation(fields: [accountId], references: [id])
+  budget      Budget?  @relation(fields: [budgetId], references: [id])
+  order       Order?   @relation(fields: [orderId], references: [id])
+}
+
+model ExpenseTemplate {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  amount      Decimal  @default(0.0)
+  accountId   String
+  category    String   @default("OPERATIONAL") // OPERATIONAL, SALARY, TRANSPORT, FOOD, ETC
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  account     FinancialAccount  @relation(fields: [accountId], references: [id])
+}
+
+// CRM Module
+
+model Deal {
+  id          String   @id @default(cuid())
+  title       String
+  value       Decimal  @default(0.0)
+  currency    String   @default("USD")
+  stage       String   @default("PROSPECT") // PROSPECT, CONTACTED, PITCH, REVIEW, NEGOTIATION, WON, LOST
+  archived    Boolean  @default(false)
+  
+  // Lead Info (for when not yet a User)
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  companyName  String?
+  source       String? // e.g. "Website", "Referral", "Cold Call"
+  
+  // Relations
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  notes       String?
+  expectedCloseDate DateTime?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

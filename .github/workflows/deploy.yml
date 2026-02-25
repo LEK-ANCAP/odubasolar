@@ -1,0 +1,37 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main # Change this if your default branch is 'master'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            # Entrar al directorio del proyecto en el VPS
+            cd ${{ secrets.VPS_TARGET_DIR }}
+            
+            # Descargar los ultimos cambios del repositorio
+            git pull origin main
+            
+            # Construir la nueva imagen de Docker con el codigo nuevo
+            docker compose build
+            
+            # Levantar los contenedores (reiniciara la app si hay cambios)
+            docker compose up -d
+            
+            # Limpiar imagenes 'colgantes' antiguas de Docker para liberar espacio en el disco
+            docker image prune -f

@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: oduba-solar-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      # Persistent volume for the SQLite database
+      - ./prisma/data:/app/prisma/data
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:./data/dev.db
+      # Add your BETTER_AUTH_URL and other secrets here or via .env file
+      # - BETTER_AUTH_URL=https://tudominio.com
+      # - BETTER_AUTH_SECRET=your_long_secret_string
