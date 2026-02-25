@@ -17,7 +17,9 @@ COPY . .
 # Generate Prisma Client
 RUN npx prisma generate
 
-# Build Next.js application
+# Build Next.js application (Provide a dummy DATABASE_URL for build time)
+ARG DATABASE_URL="file:./dev.db"
+ENV DATABASE_URL=$DATABASE_URL
 ENV NEXT_TELEMETRY_DISABLED 1
 RUN npm run build
 
