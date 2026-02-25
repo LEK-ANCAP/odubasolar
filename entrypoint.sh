@@ -7,7 +7,7 @@ echo "Starting deployment checks..."
 mkdir -p /app/prisma/data
 
 echo "Running Prisma migrations/push to sync schema with the SQLite volume..."
-npx prisma db push --accept-data-loss
+npx --yes prisma@5.22.0 db push --accept-data-loss
 
 echo "Starting Next.js..."
 exec "$@"
