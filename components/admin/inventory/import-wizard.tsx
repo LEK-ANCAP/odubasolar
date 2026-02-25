@@ -39,7 +39,6 @@ type Step = "UPLOAD" | "MAPPING" | "REVIEW" | "IMPORTING" | "SUCCESS"
 const DB_FIELDS = [
     { value: "ignore", label: "-- Ignorar Columna --" },
     { value: "name", label: "Nombre del Producto" },
-    { value: "sku", label: "SKU / Código" },
     { value: "price", label: "Precio de Venta (USD)" },
     { value: "costPrice", label: "Precio de Costo (USD)" },
     { value: "stock", label: "Cantidad en Stock" },
@@ -142,8 +141,6 @@ export function ImportWizard() {
                         matchedField = "costPrice"
                     } else if (lowerHeader.includes("cantidad") || lowerHeader.includes("stock")) {
                         matchedField = "stock"
-                    } else if (lowerHeader.includes("sku") || lowerHeader.includes("codigo") || lowerHeader.includes("código")) {
-                        matchedField = "sku"
                     } else if (lowerHeader.includes("categoria") || lowerHeader.includes("categoría")) {
                         matchedField = "category"
                     }
@@ -202,14 +199,20 @@ export function ImportWizard() {
                 return { action: "CREATE", data: productData, ignored: true, originalRow: row, index }
             }
 
-            // Format numbers
-            if (productData.price) productData.saleUsd = Number(productData.price)
-            if (productData.costPrice) productData.costUsd = Number(productData.costPrice)
-            if (productData.stock) productData.stock = Number(productData.stock)
+            // Format numbers (handle commas as decimals)
+            const parseNumber = (val: any) => {
+                if (val === undefined || val === null || val === '') return undefined;
+                if (typeof val === 'number') return val;
+                const parsed = Number(String(val).replace(',', '.'));
+                return isNaN(parsed) ? 0 : parsed;
+            }
 
-            // Conflict resolution: Check if product already exists by name or SKU
+            if (productData.price !== undefined) productData.saleUsd = parseNumber(productData.price)
+            if (productData.costPrice !== undefined) productData.costUsd = parseNumber(productData.costPrice)
+            if (productData.stock !== undefined) productData.stock = parseNumber(productData.stock)
+
+            // Conflict resolution: Check if product already exists by name
             const existingProduct = products.find(p =>
-                (productData.sku && p.sku === String(productData.sku)) ||
                 (p.name.toLowerCase() === String(productData.name).toLowerCase())
             )
 
@@ -386,7 +389,6 @@ export function ImportWizard() {
                                             <TableHead className="w-[80px]">Importar</TableHead>
                                             <TableHead className="w-[100px]">Acción</TableHead>
                                             <TableHead>Nombre</TableHead>
-                                            <TableHead>SKU</TableHead>
                                             <TableHead className="text-right">Precio ($)</TableHead>
                                             <TableHead className="text-right">Stock</TableHead>
                                         </TableRow>
@@ -408,7 +410,6 @@ export function ImportWizard() {
                                                     )}
                                                 </TableCell>
                                                 <TableCell className="font-medium">{row.data.name || "Sin nombre"}</TableCell>
-                                                <TableCell>{row.data.sku || "-"}</TableCell>
                                                 <TableCell className="text-right">{row.data.saleUsd !== undefined ? `$${row.data.saleUsd}` : "-"}</TableCell>
                                                 <TableCell className="text-right">{row.data.stock !== undefined ? row.data.stock : "-"}</TableCell>
                                             </TableRow>
