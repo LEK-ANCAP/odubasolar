@@ -389,6 +389,7 @@ export function ImportWizard() {
                                             <TableHead className="w-[80px]">Importar</TableHead>
                                             <TableHead className="w-[100px]">Acción</TableHead>
                                             <TableHead>Nombre</TableHead>
+                                            <TableHead className="text-right">Coste ($)</TableHead>
                                             <TableHead className="text-right">Precio ($)</TableHead>
                                             <TableHead className="text-right">Stock</TableHead>
                                         </TableRow>
@@ -410,6 +411,7 @@ export function ImportWizard() {
                                                     )}
                                                 </TableCell>
                                                 <TableCell className="font-medium">{row.data.name || "Sin nombre"}</TableCell>
+                                                <TableCell className="text-right">{row.data.costUsd !== undefined ? `$${row.data.costUsd}` : "-"}</TableCell>
                                                 <TableCell className="text-right">{row.data.saleUsd !== undefined ? `$${row.data.saleUsd}` : "-"}</TableCell>
                                                 <TableCell className="text-right">{row.data.stock !== undefined ? row.data.stock : "-"}</TableCell>
                                             </TableRow>
