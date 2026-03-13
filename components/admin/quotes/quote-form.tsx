@@ -493,7 +493,7 @@ export function QuoteForm({ isOpen, onClose, quoteToEdit }: QuoteFormProps) {
                                                             <div className="relative flex flex-col items-end gap-1">
                                                                 <Input
                                                                     type="number"
-                                                                    step="0.01"
+                                                                    step="any"
                                                                     className="h-8 w-28 text-right bg-slate-50 hover:bg-white focus:bg-white transition-all border-slate-200 font-medium text-slate-600 params-input [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                                     value={currency === 'USD' ? item.unitPrice : (item.unitPrice * usdRate).toFixed(2)}
                                                                     onChange={(e) => {
@@ -520,7 +520,7 @@ export function QuoteForm({ isOpen, onClose, quoteToEdit }: QuoteFormProps) {
                                                             <div className="relative flex items-center justify-end">
                                                                 <Input
                                                                     type="number"
-                                                                    step="0.01"
+                                                                    step="any"
                                                                     className="h-8 w-28 text-right bg-slate-50 hover:bg-white focus:bg-white transition-all border-slate-200 font-bold text-slate-900 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                                     value={currency === 'USD' ? (item.unitPrice * item.quantity).toFixed(2) : ((item.unitPrice * item.quantity) * usdRate).toFixed(2)}
                                                                     onChange={(e) => {
@@ -741,7 +741,7 @@ export function QuoteForm({ isOpen, onClose, quoteToEdit }: QuoteFormProps) {
                                     <Label>Precio Unit. (USD)</Label>
                                     <Input
                                         type="number"
-                                        step="0.01"
+                                        step="any"
                                         value={tempUnitPrice}
                                         onChange={(e) => setTempUnitPrice(parseFloat(e.target.value) || 0)}
                                         className="h-11 text-lg font-bold text-right"

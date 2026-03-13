@@ -208,7 +208,7 @@ export function PaymentDialog({
                                 <FormItem>
                                     <FormLabel>Monto ({currency})</FormLabel>
                                     <FormControl>
-                                        <Input type="number" step="0.01" {...field} />
+                                        <Input type="number" step="any" {...field} />
                                     </FormControl>
                                     <p className="text-xs text-slate-500">Pendiente: {remainingBalance.toFixed(2)}</p>
                                     <FormMessage />

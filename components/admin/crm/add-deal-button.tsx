@@ -85,7 +85,7 @@ export function AddDealButton() {
                             Valor
                         </Label>
                         <div className="col-span-3 flex gap-2">
-                            <Input id="value" name="value" type="number" placeholder="0.00" step="0.01" />
+                            <Input id="value" name="value" type="number" placeholder="0.00" step="any" />
                             <Select name="currency" defaultValue="USD">
                                 <SelectTrigger className="w-[100px]">
                                     <SelectValue placeholder="Moneda" />

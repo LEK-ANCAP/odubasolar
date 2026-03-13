@@ -839,7 +839,7 @@ export function OrderForm({ orderToEdit }: OrderFormProps) {
                                                         <div className="relative flex items-center justify-end gap-1">
                                                             <Input
                                                                 type="number"
-                                                                step="0.01"
+                                                                step="any"
                                                                 min="0"
                                                                 value={displayTotal.toFixed(2)}
                                                                 onChange={(e) => {

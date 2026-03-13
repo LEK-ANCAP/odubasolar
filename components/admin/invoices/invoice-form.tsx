@@ -881,7 +881,7 @@ export function InvoiceForm({ invoiceToEdit, isEditing = false }: InvoiceFormPro
                                                                             <Input
                                                                                 type="number"
                                                                                 min={0}
-                                                                                step="0.01"
+                                                                                step="any"
                                                                                 {...priceField}
                                                                                 readOnly={false}
                                                                                 className="h-9 bg-white shadow-sm border-slate-200 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -1030,7 +1030,7 @@ export function InvoiceForm({ invoiceToEdit, isEditing = false }: InvoiceFormPro
                                                                                         <Input
                                                                                             type="number"
                                                                                             min={0}
-                                                                                            step="0.01"
+                                                                                            step="any"
                                                                                             {...priceField}
                                                                                             readOnly={false}
                                                                                             className="h-9 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -1066,7 +1066,7 @@ export function InvoiceForm({ invoiceToEdit, isEditing = false }: InvoiceFormPro
                                                                     <Input
                                                                         type="number"
                                                                         min={0}
-                                                                        step="0.01"
+                                                                        step="any"
                                                                         className="h-9 text-right font-medium [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                                                                         value={subtotal ? subtotal.toFixed(2) : ""}
                                                                         readOnly // Subtotal is auto-calc
@@ -1190,7 +1190,7 @@ export function InvoiceForm({ invoiceToEdit, isEditing = false }: InvoiceFormPro
                                                                 <Input
                                                                     type="number"
                                                                     min={0}
-                                                                    step="0.01"
+                                                                    step="any"
                                                                     placeholder="0"
                                                                     className="h-8 text-xs text-right"
                                                                     {...field}
