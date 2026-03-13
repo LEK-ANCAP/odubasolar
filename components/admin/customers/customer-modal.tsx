@@ -23,6 +23,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { useCustomersStore, Customer } from "@/hooks/use-customers-store"
 import { Loader2 } from "lucide-react"
+import { generateId } from "@/lib/utils"
 
 const formSchema = z.object({
     name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -80,7 +81,7 @@ export function CustomerModal({ isOpen, onClose, customerToEdit }: CustomerModal
                 updateCustomer(customerToEdit.id, values)
             } else {
                 const newCustomer: Customer = {
-                    id: crypto.randomUUID(),
+                    id: generateId(),
                     ...values,
                     status: 'active',
                     createdAt: new Date().toISOString(),

@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import { idbStorage } from '@/lib/idb-storage'
 import { getProducts, createProduct, updateProduct, deleteProduct } from '@/app/actions/inventory'
 import { useSyncStore } from './use-sync-store'
+import { generateId } from '@/lib/utils'
 
 export interface Product {
     id: string
@@ -102,7 +103,7 @@ export const useInventoryStore = create<InventoryState>()(
             },
 
             addProduct: async (productData) => {
-                const tempId = `temp-${crypto.randomUUID()}`
+                const tempId = `temp-${generateId()}`
 
                 // Optimistic Update
                 const newProduct: Product = {

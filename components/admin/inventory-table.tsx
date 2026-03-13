@@ -460,72 +460,7 @@ export function InventoryTable() {
                             </div>
                         </div>
                     )}
-                    {/* Desktop Collapsible Filters Toolbar */}
-                    {showFilters && (
-                        <div className="hidden md:flex bg-white border border-slate-200 rounded-xl p-4 flex-col lg:flex-row gap-4 justify-between items-start lg:items-center animate-in slide-in-from-top-2 fade-in duration-200 shadow-sm -mt-2 pt-6 w-full md:w-72">
-                            <div className="flex flex-col sm:flex-row gap-4 w-full flex-wrap">
-                                {/* Sort Filter */}
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium text-slate-600">Ordenar por</span>
-                                    <div className="flex gap-1 bg-slate-100 p-1 rounded-lg">
-                                        <Button
-                                            variant={sortConfig.key === 'name' ? "secondary" : "ghost"}
-                                            size="sm"
-                                            onClick={() => handleSort('name')}
-                                            className="h-7 px-3 text-xs shadow-none"
-                                        >
-                                            Nombre
-                                            {sortConfig.key === 'name' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 ml-1" /> : <ArrowDown className="w-3 h-3 ml-1" />)}
-                                            {sortConfig.key !== 'name' && <ArrowUpDown className="w-3 h-3 ml-1 text-slate-300" />}
-                                        </Button>
-                                        <Button
-                                            variant={sortConfig.key === 'stock' ? "secondary" : "ghost"}
-                                            size="sm"
-                                            onClick={() => handleSort('stock')}
-                                            className="h-7 px-3 text-xs shadow-none"
-                                        >
-                                            Inventario
-                                            {sortConfig.key === 'stock' && (sortConfig.direction === 'asc' ? <ArrowUp className="w-3 h-3 ml-1" /> : <ArrowDown className="w-3 h-3 ml-1" />)}
-                                            {sortConfig.key !== 'stock' && <ArrowUpDown className="w-3 h-3 ml-1 text-slate-300" />}
-                                        </Button>
-                                    </div>
-                                </div>
 
-                                {/* Category Filter */}
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-medium text-slate-600">Categoría</span>
-                                    <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                                        <SelectTrigger className="w-[180px] h-9 bg-white border-slate-200 text-sm shadow-sm focus:ring-slate-900">
-                                            <SelectValue placeholder="Todas" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem value="all">Todas las categorías</SelectItem>
-                                            {categories.map((cat, idx) => (
-                                                <SelectItem key={`cat-filter-desk-${cat || idx}-${idx}`} value={cat || `uncategorized-${idx}`}>
-                                                    {cat || "Sin categoría"}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
-
-                                {/* Show CUP toggle */}
-                                <div className="flex items-center space-x-2 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-100 ml-auto mr-4 lg:mr-0">
-                                    <Checkbox
-                                        id="show-cup"
-                                        checked={showCup}
-                                        onCheckedChange={(checked) => setShowCup(checked as boolean)}
-                                    />
-                                    <label
-                                        htmlFor="show-cup"
-                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer text-slate-700"
-                                    >
-                                        Mostrar en CUP
-                                    </label>
-                                </div>
-                            </div>
-                        </div>
-                    )}
                 </div>
             </div>
 
@@ -549,20 +484,12 @@ export function InventoryTable() {
                             {searchTerm && (
                                 <button
                                     onClick={() => setSearchTerm("")}
-                                    className="absolute right-2 md:right-10 top-1/2 -translate-y-1/2 flex items-center justify-center h-6 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 rounded-md transition-colors z-10 font-medium text-[10px]"
+                                    className="absolute right-2 md:right-1.5 top-1/2 -translate-y-1/2 flex items-center justify-center h-6 px-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 rounded-md transition-colors z-10 font-medium text-[10px]"
                                 >
                                     <X className="w-3 h-3 mr-1" />
                                     Borrar
                                 </button>
                             )}
-                            <Button
-                                variant={showFilters ? "secondary" : "ghost"}
-                                onClick={() => setShowFilters(!showFilters)}
-                                className="hidden md:flex absolute right-1.5 top-1/2 -translate-y-1/2 h-7 w-7 shrink-0 p-0 rounded-lg z-10 hover:bg-slate-100"
-                                title="Filtros"
-                            >
-                                <Filter className="w-3.5 h-3.5 text-slate-500" />
-                            </Button>
 
                             {/* Autocomplete Dropdown */}
                             {searchFocused && searchTerm && (
@@ -641,128 +568,126 @@ export function InventoryTable() {
                 </div>
 
                 {/* Collapsible Filters Toolbar */}
-                {showFilters && (
-                    <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col lg:flex-row gap-4 justify-between items-start lg:items-center animate-in slide-in-from-top-2 fade-in duration-200 shadow-sm mb-4">
-                        <div className="flex flex-wrap gap-3 items-center w-full lg:w-auto">
-                            {/* Category Filter */}
+                <div className={cn("bg-white border border-slate-200 rounded-xl p-4 flex-col lg:flex-row gap-4 justify-between items-start lg:items-center shadow-sm mb-4", showFilters ? "flex" : "hidden md:flex")}>
+                    <div className="flex flex-wrap gap-3 items-center w-full lg:w-auto">
+                        {/* Category Filter */}
+                        <Select
+                            value={selectedCategory}
+                            onValueChange={(val) => {
+                                setSelectedCategory(val)
+                                setCurrentPage(1)
+                            }}
+                        >
+                            <SelectTrigger className="h-9 w-[130px] md:w-[160px] bg-white border-slate-200 text-sm font-medium text-slate-600 shadow-sm focus:ring-slate-900 focus:ring-1 rounded-lg">
+                                <div className="flex items-center gap-2 truncate">
+                                    <Filter className="w-3.5 h-3.5 text-slate-400" />
+                                    <SelectValue placeholder="Categoría" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent align="end">
+                                <SelectItem value="all" className="text-sm font-medium">Todas</SelectItem>
+                                {categories.map((category, catIdx) => (
+                                    <SelectItem key={category || `cat-${catIdx}`} value={category} className="text-sm">{category}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+
+                        {/* Sort Dropdown for Mobile (and Desktop) */}
+                        <Select
+                            value={sortConfig.key ? `${sortConfig.key}-${sortConfig.direction}` : "none"}
+                            onValueChange={(val) => {
+                                if (val === "none") {
+                                    setSortConfig({ key: null, direction: 'asc' })
+                                    return
+                                }
+                                const [key, direction] = val.split('-') as [SortConfig['key'], SortConfig['direction']]
+                                setSortConfig({ key, direction })
+                            }}
+                        >
+                            <SelectTrigger className="h-9 w-[130px] md:w-[160px] bg-white border-slate-200 text-sm font-medium text-slate-600 shadow-sm focus:ring-slate-900 focus:ring-1 rounded-lg">
+                                <div className="flex items-center gap-2 truncate">
+                                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
+                                    <SelectValue placeholder="Ordenar" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent align="end">
+                                <SelectItem value="none" className="text-sm font-medium text-slate-500">Sin ordenar</SelectItem>
+                                <SelectItem value="name-asc" className="text-sm">Nombre (A-Z)</SelectItem>
+                                <SelectItem value="name-desc" className="text-sm">Nombre (Z-A)</SelectItem>
+                                <SelectItem value="stock-asc" className="text-sm">Menor Stock</SelectItem>
+                                <SelectItem value="stock-desc" className="text-sm">Mayor Stock</SelectItem>
+                            </SelectContent>
+                        </Select>
+
+                        <div className="flex items-center space-x-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 h-9">
+                            <Checkbox
+                                id="showCup"
+                                checked={showCup}
+                                onCheckedChange={(checked) => setShowCup(checked as boolean)}
+                                className="w-4 h-4 border-slate-300 data-[state=checked]:bg-slate-900 data-[state=checked]:border-slate-900"
+                            />
+                            <label
+                                htmlFor="showCup"
+                                className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-600 cursor-pointer"
+                            >
+                                Mostrar precio CUP
+                            </label>
+                        </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3 items-center w-full lg:w-auto justify-between lg:justify-end">
+                        {/* Rows Per Page */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] text-slate-500 font-bold whitespace-nowrap uppercase tracking-wider">Filas</span>
                             <Select
-                                value={selectedCategory}
+                                value={itemsPerPage.toString()}
                                 onValueChange={(val) => {
-                                    setSelectedCategory(val)
+                                    setItemsPerPage(Number(val))
                                     setCurrentPage(1)
                                 }}
                             >
-                                <SelectTrigger className="h-9 w-[130px] md:w-[160px] bg-white border-slate-200 text-sm font-medium text-slate-600 shadow-sm focus:ring-slate-900 focus:ring-1 rounded-lg">
-                                    <div className="flex items-center gap-2 truncate">
-                                        <Filter className="w-3.5 h-3.5 text-slate-400" />
-                                        <SelectValue placeholder="Categoría" />
-                                    </div>
+                                <SelectTrigger className="h-9 w-[80px] text-sm bg-white border-slate-200 shadow-sm focus:ring-slate-900 focus:ring-1 text-slate-600 font-medium rounded-lg">
+                                    <SelectValue placeholder="25" />
                                 </SelectTrigger>
                                 <SelectContent align="end">
-                                    <SelectItem value="all" className="text-sm font-medium">Todas</SelectItem>
-                                    {categories.map((category, catIdx) => (
-                                        <SelectItem key={category || `cat-${catIdx}`} value={category} className="text-sm">{category}</SelectItem>
-                                    ))}
+                                    <SelectItem value="10" className="text-sm">10</SelectItem>
+                                    <SelectItem value="25" className="text-sm">25</SelectItem>
+                                    <SelectItem value="50" className="text-sm">50</SelectItem>
+                                    <SelectItem value="9999" className="text-sm">Todos</SelectItem>
                                 </SelectContent>
                             </Select>
-
-                            {/* Sort Dropdown for Mobile (and Desktop) */}
-                            <Select
-                                value={sortConfig.key ? `${sortConfig.key}-${sortConfig.direction}` : "none"}
-                                onValueChange={(val) => {
-                                    if (val === "none") {
-                                        setSortConfig({ key: null, direction: 'asc' })
-                                        return
-                                    }
-                                    const [key, direction] = val.split('-') as [SortConfig['key'], SortConfig['direction']]
-                                    setSortConfig({ key, direction })
-                                }}
-                            >
-                                <SelectTrigger className="h-9 w-[130px] md:w-[160px] bg-white border-slate-200 text-sm font-medium text-slate-600 shadow-sm focus:ring-slate-900 focus:ring-1 rounded-lg">
-                                    <div className="flex items-center gap-2 truncate">
-                                        <ArrowUpDown className="w-3.5 h-3.5 text-slate-400" />
-                                        <SelectValue placeholder="Ordenar" />
-                                    </div>
-                                </SelectTrigger>
-                                <SelectContent align="end">
-                                    <SelectItem value="none" className="text-sm font-medium text-slate-500">Sin ordenar</SelectItem>
-                                    <SelectItem value="name-asc" className="text-sm">Nombre (A-Z)</SelectItem>
-                                    <SelectItem value="name-desc" className="text-sm">Nombre (Z-A)</SelectItem>
-                                    <SelectItem value="stock-asc" className="text-sm">Menor Stock</SelectItem>
-                                    <SelectItem value="stock-desc" className="text-sm">Mayor Stock</SelectItem>
-                                </SelectContent>
-                            </Select>
-
-                            <div className="flex items-center space-x-2 bg-slate-50 px-3 py-2 rounded-lg border border-slate-100 h-9">
-                                <Checkbox
-                                    id="showCup"
-                                    checked={showCup}
-                                    onCheckedChange={(checked) => setShowCup(checked as boolean)}
-                                    className="w-4 h-4 border-slate-300 data-[state=checked]:bg-slate-900 data-[state=checked]:border-slate-900"
-                                />
-                                <label
-                                    htmlFor="showCup"
-                                    className="text-xs font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-600 cursor-pointer"
-                                >
-                                    Mostrar precio CUP
-                                </label>
-                            </div>
                         </div>
 
-                        <div className="flex flex-wrap gap-3 items-center w-full lg:w-auto justify-between lg:justify-end">
-                            {/* Rows Per Page */}
-                            <div className="flex items-center gap-2">
-                                <span className="text-[10px] text-slate-500 font-bold whitespace-nowrap uppercase tracking-wider">Filas</span>
-                                <Select
-                                    value={itemsPerPage.toString()}
-                                    onValueChange={(val) => {
-                                        setItemsPerPage(Number(val))
-                                        setCurrentPage(1)
-                                    }}
-                                >
-                                    <SelectTrigger className="h-9 w-[80px] text-sm bg-white border-slate-200 shadow-sm focus:ring-slate-900 focus:ring-1 text-slate-600 font-medium rounded-lg">
-                                        <SelectValue placeholder="25" />
-                                    </SelectTrigger>
-                                    <SelectContent align="end">
-                                        <SelectItem value="10" className="text-sm">10</SelectItem>
-                                        <SelectItem value="25" className="text-sm">25</SelectItem>
-                                        <SelectItem value="50" className="text-sm">50</SelectItem>
-                                        <SelectItem value="9999" className="text-sm">Todos</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            {/* Pagination */}
-                            <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-lg border border-slate-100 h-9">
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 rounded-md hover:bg-white hover:shadow-sm"
-                                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                                    disabled={currentPage === 1}
-                                >
-                                    <ChevronLeft className="w-4 h-4 text-slate-600" />
-                                </Button>
-                                <span className="text-xs font-semibold text-slate-600 min-w-[4rem] text-center">
-                                    {currentPage} de {totalPages || 1}
-                                </span>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 rounded-md hover:bg-white hover:shadow-sm"
-                                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                                    disabled={currentPage === totalPages || totalPages === 0}
-                                >
-                                    <ChevronRight className="w-4 h-4 text-slate-600" />
-                                </Button>
-                            </div>
-
-                            <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 shadow-sm bg-white" title="Exportar">
-                                <Download className="w-4 h-4" />
+                        {/* Pagination */}
+                        <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-lg border border-slate-100 h-9">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 rounded-md hover:bg-white hover:shadow-sm"
+                                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                                disabled={currentPage === 1}
+                            >
+                                <ChevronLeft className="w-4 h-4 text-slate-600" />
+                            </Button>
+                            <span className="text-xs font-semibold text-slate-600 min-w-[4rem] text-center">
+                                {currentPage} de {totalPages || 1}
+                            </span>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 rounded-md hover:bg-white hover:shadow-sm"
+                                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                                disabled={currentPage === totalPages || totalPages === 0}
+                            >
+                                <ChevronRight className="w-4 h-4 text-slate-600" />
                             </Button>
                         </div>
+
+                        <Button variant="outline" size="icon" className="h-9 w-9 rounded-lg border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-900 shadow-sm bg-white" title="Exportar">
+                            <Download className="w-4 h-4" />
+                        </Button>
                     </div>
-                )}
+                </div>
 
                 {/* Desktop Table View */}
                 <div className="hidden md:block overflow-x-auto">

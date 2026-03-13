@@ -7,6 +7,7 @@ import * as z from "zod"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useBudgetsStore } from "@/hooks/use-budgets-store"
 import { updateBudgetStatus } from "@/app/actions/budgets"
+import { generateId } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
     Form,
@@ -403,7 +404,7 @@ export function InvoiceForm({ invoiceToEdit, isEditing = false }: InvoiceFormPro
         try {
             // Calculate totals (NO TAX)
             const itemsWithTotal = values.items.map(item => ({
-                id: crypto.randomUUID(),
+                id: generateId(),
                 ...item,
                 total: item.quantity * item.price
             }))
@@ -447,7 +448,7 @@ export function InvoiceForm({ invoiceToEdit, isEditing = false }: InvoiceFormPro
                     if (invoiceToEdit.status !== values.status) changes.status = { from: invoiceToEdit.status, to: values.status }
 
                     history.push({
-                        id: crypto.randomUUID(),
+                        id: generateId(),
                         date: new Date().toISOString(),
                         action: 'updated',
                         description: 'Factura pagada editada',

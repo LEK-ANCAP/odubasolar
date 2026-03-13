@@ -4,6 +4,7 @@ import { idbStorage } from '@/lib/idb-storage'
 import { createProduct, updateProduct, deleteProduct } from '@/app/actions/inventory'
 import { createBudget, updateBudget, deleteBudget } from '@/app/actions/budgets'
 import { createProvider, updateProvider, deleteProvider } from '@/app/actions/providers'
+import { generateId } from '@/lib/utils'
 import { toast } from 'sonner'
 
 export type SyncActionType =
@@ -53,7 +54,7 @@ export const useSyncStore = create<SyncState>()(
             addToQueue: (action) => {
                 const newAction: SyncAction = {
                     ...action,
-                    id: crypto.randomUUID(),
+                    id: generateId(),
                     timestamp: Date.now(),
                     retryCount: 0,
                     status: 'pending'

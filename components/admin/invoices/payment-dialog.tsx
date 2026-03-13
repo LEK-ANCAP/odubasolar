@@ -44,6 +44,7 @@ import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 import { useInvoicesStore } from "@/hooks/use-invoices-store"
 import { useAccountsStore } from "@/hooks/use-accounts-store"
+import { generateId } from "@/lib/utils"
 
 const formSchema = z.object({
     date: z.date(),
@@ -108,7 +109,7 @@ export function PaymentDialog({
                 return
             }
 
-            const paymentId = crypto.randomUUID()
+            const paymentId = generateId()
 
             // 1. Add Payment to Invoice
             addPayment(invoiceId, {
@@ -126,7 +127,7 @@ export function PaymentDialog({
             // but ideally we should filter accounts by currency.
 
             addMovement({
-                id: crypto.randomUUID(),
+                id: generateId(),
                 accountId: values.accountId,
                 date: values.date.toISOString(),
                 description: `Pago Factura #${invoiceId}`,
